@@ -12,19 +12,19 @@ datasource db {
 }
 
 model User {
-  id                     String          @id @default(uuid())
-  email                  String          @unique
-  username               String          @unique
-  passwordHash           String
-  displayName            String?
-  bio                    String?         @db.Text
-  avatarUrl              String?
-  createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @updatedAt
-  todos                  Todo[]
-  sentFriendRequests     FriendRequest[] @relation("SentFriendRequests")
-  receivedFriendRequests FriendRequest[] @relation("ReceivedFriendRequests")
-  refreshTokens          RefreshToken[]
+  id                  String         @id @default(uuid())
+  email               String         @unique
+  username            String         @unique
+  passwordHash        String
+  displayName         String?
+  bio                 String?        @db.Text
+  avatarUrl           String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  todos               Todo[]
+  sentFriendships     Friendship[]   @relation("SentFriendships")
+  receivedFriendships Friendship[]   @relation("ReceivedFriendships")
+  refreshTokens       RefreshToken[]
 }
 
 enum TodoVisibility {
@@ -41,32 +41,31 @@ model Todo {
   visibility  TodoVisibility @default(PRIVATE)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
-  owner       User           @relation(fields: [ownerId], references: [id])
+  owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     String
 
   @@index([ownerId])
 }
 
-enum FriendRequestStatus {
+enum FriendshipStatus {
   PENDING
   ACCEPTED
-  REJECTED
-  CANCELLED
 }
 
-model FriendRequest {
-  id         String              @id @default(uuid())
-  sender     User                @relation(name: "SentFriendRequests", fields: [senderId], references: [id])
-  receiver   User                @relation(name: "ReceivedFriendRequests", fields: [receiverId], references: [id])
-  status     FriendRequestStatus @default(PENDING)
-  createdAt  DateTime            @default(now())
-  updatedAt  DateTime            @updatedAt
+model Friendship {
+  id         String           @id @default(uuid())
+  sender     User             @relation(name: "SentFriendships", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User             @relation(name: "ReceivedFriendships", fields: [receiverId], references: [id], onDelete: Cascade)
+  status     FriendshipStatus @default(PENDING)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  acceptedAt DateTime?
   senderId   String
   receiverId String
 
   @@unique([senderId, receiverId])
-  @@index([senderId])
-  @@index([receiverId])
+  @@index([senderId, status])
+  @@index([receiverId, status])
 }
 
 model RefreshToken {
