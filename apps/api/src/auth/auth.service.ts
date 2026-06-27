@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -14,6 +15,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tokenService: TokenService,
+    private readonly logger: Logger = new Logger(AuthService.name),
   ) {}
 
   async register(dto: RegisterDto) {
@@ -39,13 +41,14 @@ export class AuthService {
         passwordHash,
         username,
       },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+      },
     });
 
-    return {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-    };
+    return user;
   }
 
   async login(dto: LoginDto) {
@@ -80,48 +83,50 @@ export class AuthService {
     };
   }
 
-  async refresh(token: string) {
+  async logout(token: string) {
     try {
-      let { sub, jti } = await this.tokenService.verifyRefreshToken(token);
-      const refreshToken = await this.prisma.refreshToken.findFirst({
-        where: { id: jti, userId: sub },
-        include: { user: true },
-      });
-
-      if (!refreshToken) {
-        throw new UnauthorizedException('Invalid Credentials');
-      }
-
-      let hash = this.tokenService.hashRefreshToken(token);
-      if (
-        refreshToken.tokenHash !== hash ||
-        refreshToken.revokedAt != null ||
-        refreshToken.expiresAt < new Date()
-      ) {
-        throw new UnauthorizedException('Invalid Credentials');
-      }
+      const refreshToken = await this.validateRefreshToken(token);
 
       await this.prisma.refreshToken.update({
         where: {
-          id: jti,
+          id: refreshToken.id,
         },
         data: {
           revokedAt: new Date(),
         },
       });
+    } catch {
+      // throw new UnauthorizedException('Invalid Credentials');
+      this.logger.warn(`Logout requested with an invalid refresh token!`);
+    }
+  }
 
+  async refresh(token: string) {
+    try {
+      const refreshToken = await this.validateRefreshToken(token);
       const newRefreshToken = await this.tokenService.generateRefreshToken(
         refreshToken.userId,
       );
 
-      await this.prisma.refreshToken.create({
-        data: {
-          id: newRefreshToken.jti,
-          expiresAt: newRefreshToken.expiresAt,
-          tokenHash: newRefreshToken.hash,
-          userId: refreshToken.userId,
-        },
-      });
+      await this.prisma.$transaction([
+        this.prisma.refreshToken.update({
+          where: {
+            id: refreshToken.id,
+          },
+          data: {
+            revokedAt: new Date(),
+          },
+        }),
+
+        this.prisma.refreshToken.create({
+          data: {
+            id: newRefreshToken.jti,
+            expiresAt: newRefreshToken.expiresAt,
+            tokenHash: newRefreshToken.hash,
+            userId: refreshToken.userId,
+          },
+        }),
+      ]);
       const newAccessToken = await this.tokenService.generateAccessToken(
         refreshToken.userId,
         refreshToken.user.username,
@@ -134,6 +139,32 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException('Invalid Credentials');
     }
+  }
+
+  private async validateRefreshToken(token: string) {
+    const { sub, jti } = await this.tokenService.verifyRefreshToken(token);
+
+    const refreshToken = await this.prisma.refreshToken.findUnique({
+      where: { id: jti },
+      include: { user: true },
+    });
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const tokenHash = this.tokenService.hashRefreshToken(token);
+
+    if (
+      refreshToken.userId !== sub ||
+      refreshToken.tokenHash !== tokenHash ||
+      refreshToken.revokedAt !== null ||
+      refreshToken.expiresAt < new Date()
+    ) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    return refreshToken;
   }
 
   private async findUserByEmailOrUsername(email: string, username: string) {
