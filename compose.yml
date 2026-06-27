@@ -1,0 +1,56 @@
+name: todos-social
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: todos-social-postgres
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: todos_social
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - todos-social-postgres-data:/var/lib/postgresql/data
+
+    networks:
+      - todos-social-network
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d todos_social"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8
+
+    container_name: todos-social-redis
+
+    restart: unless-stopped
+
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - todos-social-redis-data:/data
+
+    networks:
+      - todos-social-network
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  todos-social-postgres-data:
+  todos-social-redis-data:
+networks:
+  todos-social-network:

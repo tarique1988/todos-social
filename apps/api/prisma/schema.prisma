@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                     String          @id @default(uuid())
+  email                  String          @unique
+  username               String          @unique
+  passwordHash           String
+  displayName            String?
+  bio                    String?         @db.Text
+  avatarUrl              String?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  todos                  Todo[]
+  sentFriendRequests     FriendRequest[] @relation("SentFriendRequests")
+  receivedFriendRequests FriendRequest[] @relation("ReceivedFriendRequests")
+  refreshTokens          RefreshToken[]
+}
+
+enum TodoVisibility {
+  PUBLIC
+  FRIENDS
+  PRIVATE
+}
+
+model Todo {
+  id          String         @id @default(uuid())
+  title       String
+  description String?
+  completed   Boolean        @default(false)
+  visibility  TodoVisibility @default(PRIVATE)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  owner       User           @relation(fields: [ownerId], references: [id])
+  ownerId     String
+
+  @@index([ownerId])
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+model FriendRequest {
+  id         String              @id @default(uuid())
+  sender     User                @relation(name: "SentFriendRequests", fields: [senderId], references: [id])
+  receiver   User                @relation(name: "ReceivedFriendRequests", fields: [receiverId], references: [id])
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  senderId   String
+  receiverId String
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+model RefreshToken {
+  id String @id @default(uuid())
+
+  tokenHash String
+
+  expiresAt DateTime
+
+  revokedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([userId])
+  @@index([expiresAt])
+}

@@ -1,4 +1,19 @@
 {
   "name": "todos-social",
-  "packageManager": "yarn@4.9.2"
+  "private": true,
+  "packageManager": "yarn@4.17.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2"
+  }
 }
