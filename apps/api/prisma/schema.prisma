@@ -69,18 +69,13 @@ model Friendship {
 }
 
 model RefreshToken {
-  id String @id @default(uuid())
-
+  id        String    @id @default(uuid())
   tokenHash String
-
   expiresAt DateTime
-
   revokedAt DateTime?
-
-  createdAt DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
 
   @@index([userId])
   @@index([expiresAt])
