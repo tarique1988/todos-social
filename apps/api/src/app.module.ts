@@ -12,10 +12,11 @@ import { HealthModule } from './health/health.module';
 import { CommonModule } from './common/common.module';
 import { EnvModule } from './env/env.module';
 import { PrismaModule } from './prisma/prisma.module';
+import jwtConfig from './env/jwt.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, cache: true }),
+    ConfigModule.forRoot({ isGlobal: true, cache: true, load: [jwtConfig] }),
     AuthModule,
     EnvModule,
     UsersModule,
