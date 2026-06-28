@@ -4,10 +4,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateTodoDto } from './dto/create-todo-dto';
-import { TodoResponseDto } from './dto/todo-response-dto';
+import { CreateTodoDto } from './dto/create-todo.dto';
+import { TodoResponseDto } from './dto/todo-response.dto';
 import { Prisma, Todo, TodoVisibility } from '@prisma/client';
-import { UpdateTodoDto } from './dto/update-todo-dto';
+import { UpdateTodoDto } from './dto/update-todo.dto';
 import { FriendsService } from '../friends/friends.service';
 import { RelationshipStatus } from '../friends/enums/relationship-status';
 

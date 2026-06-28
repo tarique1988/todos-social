@@ -14,11 +14,14 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { type AuthenticatedUser } from '../auth/types/authenticated-user';
-import { CreateTodoDto } from './dto/create-todo-dto';
-import { TodoResponseDto } from './dto/todo-response-dto';
+import { CreateTodoDto } from './dto/create-todo.dto';
+import { TodoResponseDto } from './dto/todo-response.dto';
 import { TodosService } from './todos.service';
-import { UpdateTodoDto } from './dto/update-todo-dto';
+import { UpdateTodoDto } from './dto/update-todo.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Todos')
+@ApiBearerAuth()
 @Controller('todos')
 @UseGuards(JwtAuthGuard)
 export class TodosController {

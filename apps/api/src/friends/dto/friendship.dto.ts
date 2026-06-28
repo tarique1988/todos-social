@@ -1,6 +1,8 @@
+import { FriendshipStatus } from '@prisma/client';
+
 export class FriendshipDto {
   id!: string;
-  status!: string;
+  status!: FriendshipStatus;
   sender!: {
     username: string;
   };

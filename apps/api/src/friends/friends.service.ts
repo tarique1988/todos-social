@@ -9,11 +9,11 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthenticatedUser } from '../auth/types/authenticated-user';
-import { FriendshipDto } from './dto/friendship-dto';
+import { FriendshipDto } from './dto/friendship.dto';
 import { Prisma, FriendshipStatus } from '@prisma/client';
-import { FriendDto } from './dto/friend-dto';
+import { FriendDto } from './dto/friend.dto';
 import { RelationshipStatus } from './enums/relationship-status';
-import { RelationshipResponseDto } from './dto/relationship-response-dto';
+import { RelationshipResponseDto } from './dto/relationship-response.dto';
 
 @Injectable()
 export class FriendsService {

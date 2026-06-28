@@ -1,5 +1,5 @@
 import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
-import { Trim } from '../../common/decorators/trim-decorator';
+import { Trim } from '../../common/decorators/trim.decorator';
 
 export class UpdateProfileDto {
   @IsOptional()
