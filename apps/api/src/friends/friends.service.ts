@@ -3,18 +3,24 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthenticatedUser } from '../auth/types/authenticated-user';
 import { FriendshipDto } from './dto/friendship-dto';
 import { Prisma, FriendshipStatus } from '@prisma/client';
-import { UserProfileDto } from '../users/dto/user-profile.dto';
 import { FriendDto } from './dto/friend-dto';
+import { RelationshipStatus } from './enums/relationship-status';
+import { RelationshipResponseDto } from './dto/relationship-response-dto';
 
 @Injectable()
 export class FriendsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: Logger = new Logger(FriendsService.name),
+  ) {}
 
   async sendRequest(
     sender: AuthenticatedUser,
@@ -116,6 +122,23 @@ export class FriendsService {
           { senderId: userB, receiverId: userA },
         ],
       },
+      select: {
+        senderId: true,
+        receiverId: true,
+        status: true,
+        createdAt: true,
+        acceptedAt: true,
+        sender: {
+          select: {
+            username: true,
+          },
+        },
+        receiver: {
+          select: {
+            username: true,
+          },
+        },
+      },
     });
 
     return existing;
@@ -206,5 +229,50 @@ export class FriendsService {
         displayName: f.displayName ?? '',
         avatarUrl: f.avatarUrl ?? '',
       }));
+  }
+
+  async getFriendshipStatus(
+    viewerUsername: string,
+    viewerId: string,
+    profileUsername: string,
+  ): Promise<RelationshipResponseDto> {
+    if (viewerUsername === profileUsername) {
+      return { status: RelationshipStatus.SELF };
+    }
+
+    const profile = await this.prisma.user.findUnique({
+      where: { username: profileUsername },
+      select: { id: true },
+    });
+
+    if (!profile) {
+      throw new NotFoundException(`User: ${profileUsername} was not found`);
+    }
+
+    const friendship = await this.findFriendshipBetween(viewerId, profile.id);
+
+    console.log(friendship);
+
+    if (!friendship) {
+      return { status: RelationshipStatus.NONE };
+    }
+
+    switch (friendship.status) {
+      case FriendshipStatus.ACCEPTED:
+        return { status: RelationshipStatus.FRIENDS };
+
+      case FriendshipStatus.PENDING:
+        return {
+          status:
+            friendship.senderId === viewerId
+              ? RelationshipStatus.OUTGOING_REQUEST
+              : RelationshipStatus.INCOMING_REQUEST,
+        };
+
+      default:
+        throw new InternalServerErrorException(
+          `Unhandled friendship status: ${friendship.status}`,
+        );
+    }
   }
 }

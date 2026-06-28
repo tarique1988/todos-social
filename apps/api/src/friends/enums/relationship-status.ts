@@ -1,0 +1,7 @@
+export const enum RelationshipStatus {
+  NONE = 'NONE',
+  SELF = 'SELF',
+  OUTGOING_REQUEST = 'OUTGOING_REQUEST',
+  INCOMING_REQUEST = 'INCOMING_REQUEST',
+  FRIENDS = 'FRIENDS',
+}
