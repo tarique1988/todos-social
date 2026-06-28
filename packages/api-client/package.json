@@ -1,0 +1,8 @@
+{
+  "name": "api-client",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "packageManager": "yarn@4.17.0"
+}

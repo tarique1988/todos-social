@@ -11,9 +11,12 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "generate:client": "openapi-ts -i apps/api/openapi.json -o packages/api-client/src/ -c @hey-api/client-next"
   },
   "devDependencies": {
+    "@hey-api/client-next": "0.5.1",
+    "@hey-api/openapi-ts": "0.99.0",
     "turbo": "^2"
   }
 }
