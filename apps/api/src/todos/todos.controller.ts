@@ -57,7 +57,7 @@ export class TodosController {
     return this.todosService.deleteTodo(user.id, todoId);
   }
 
-  @Get('/user/:username')
+  @Get('/users/:username')
   async getUserTodos(
     @CurrentUser() user: AuthenticatedUser,
     @Param('username') profileUsername: string,

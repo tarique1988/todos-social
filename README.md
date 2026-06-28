@@ -23,4 +23,7 @@
 - /todos: +0ms
   - /todos, POST route +0ms
   - /todos, GET route +0ms
+  - /todos/:id, PATCH route +0ms
+  - /todos/:id, DELETE route +0ms
+  - /todos/users/:username, GET route +0ms
 - Nest application successfully started +80ms
