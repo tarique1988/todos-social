@@ -9,6 +9,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthenticatedUser } from '../auth/types/authenticated-user';
 import { FriendshipDto } from './dto/friendship-dto';
 import { Prisma, FriendshipStatus } from '@prisma/client';
+import { UserProfileDto } from '../users/dto/user-profile.dto';
+import { FriendDto } from './dto/friend-dto';
 
 @Injectable()
 export class FriendsService {
@@ -166,5 +168,43 @@ export class FriendsService {
     await this.prisma.friendship.delete({
       where: { id: friendshipId },
     });
+  }
+
+  async getFriends(user: AuthenticatedUser): Promise<FriendDto[]> {
+    const friendships = await this.prisma.friendship.findMany({
+      where: {
+        OR: [{ senderId: user.id }, { receiverId: user.id }],
+        status: FriendshipStatus.ACCEPTED,
+      },
+      select: {
+        sender: {
+          select: {
+            id: true,
+            displayName: true,
+            username: true,
+            avatarUrl: true,
+          },
+        },
+        receiver: {
+          select: {
+            id: true,
+            displayName: true,
+            username: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    return friendships
+      .map((f) => {
+        return f.receiver.id == user.id ? f.sender : f.receiver;
+      })
+      .map((f) => ({
+        id: f.id,
+        username: f.username,
+        displayName: f.displayName ?? '',
+        avatarUrl: f.avatarUrl ?? '',
+      }));
   }
 }

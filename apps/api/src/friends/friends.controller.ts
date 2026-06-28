@@ -13,6 +13,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { type AuthenticatedUser } from '../auth/types/authenticated-user';
 import { FriendsService } from './friends.service';
 import { FriendshipDto } from './dto/friendship-dto';
+import { FriendDto } from './dto/friend-dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('friends')
@@ -55,5 +56,13 @@ export class FriendsController {
     @Param('id', new ParseUUIDPipe()) friendshipId: string,
   ): Promise<void> {
     return this.friendsService.rejectRequest(user.id, friendshipId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/')
+  async getFriends(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<FriendDto[]> {
+    return this.friendsService.getFriends(user);
   }
 }
