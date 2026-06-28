@@ -251,8 +251,6 @@ export class FriendsService {
 
     const friendship = await this.findFriendshipBetween(viewerId, profile.id);
 
-    console.log(friendship);
-
     if (!friendship) {
       return { status: RelationshipStatus.NONE };
     }
