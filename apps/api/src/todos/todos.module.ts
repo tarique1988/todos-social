@@ -1,4 +1,10 @@
 import { Module } from '@nestjs/common';
+import { TodosService } from './todos.service';
+import { TodosController } from './todos.controller';
 
-@Module({})
+@Module({
+  imports: [],
+  providers: [TodosService],
+  controllers: [TodosController],
+})
 export class TodosModule {}
